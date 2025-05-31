@@ -54,14 +54,56 @@ The following options can be used to customise the k8s-shredder controller:
 |           AllowEvictionLabel            |     "shredder.ethos.adobe.net/allow-eviction"     |                        Label used for skipping evicting pods that have explicitly set this label on false                         |
 |            ToBeDeletedTaint             |         "ToBeDeletedByClusterAutoscaler"          |               Node taint used for skipping a subset of parked nodes that are already handled by cluster-autoscaler                |
 |         ArgoRolloutsAPIVersion          |                    "v1alpha1"                     |                     API version from `argoproj.io` API group to be used while handling Argo Rollouts objects                      |
+|          DriftedNodeExpiration          |                        24h                        |                           Expiration time for nodes that are marked as drifted from Karpenter node claims                           |
+|      EnableKarpenterDriftDetection      |                       false                        |                    Controls whether to scan for drifted Karpenter NodeClaims and automatically label their nodes                     |
+|              ParkedByLabel               |    "shredder.ethos.adobe.net/parked-by"          |                                   Label used to identify which component parked the node                                             |
+|             ParkedNodeTaint              | "shredder.ethos.adobe.net/upgrade-status=parked:NoSchedule" |                          Taint to apply to parked nodes in format key=value:effect                                                   |
+|        EnableNodeLabelDetection         |                       false                        |                    Controls whether to scan for nodes with specific labels and automatically park them                               |
+|           NodeLabelsToDetect            |                        []                         |                     List of node labels to detect. Supports both key-only and key=value formats                                    |
 
 
 ### How it works
 
 K8s-shredder will periodically run eviction loops, based on configured `EvictionLoopInterval`, trying to clean up all the pods from
 the parked nodes. Once all the pods are cleaned up, [cluster-autoscaler](
-https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) should chime in and recycle the parked node.
+https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler) or [karpenter](https://github.com/kubernetes-sigs/karpenter) should chime in and recycle the parked node.
 
 The diagram below describes a simple flow about how k8s-shredder handles stateful set applications:
 
 <img src="docs/k8s-shredder.gif" alt="K8s-Shredder project"/>
+
+#### Karpenter Integration
+
+K8s-shredder now includes optional automatic detection of drifted Karpenter NodeClaims. This feature is enabled by default but can be disabled by setting `EnableKarpenterDriftDetection` to `true`. When enabled, at the beginning of each eviction loop, the application will:
+
+1. Scan the Kubernetes cluster for Karpenter NodeClaims that are marked as "Drifted"
+2. Identify the nodes associated with these drifted NodeClaims
+3. Automatically process these nodes by:
+   - **Labeling** nodes and their non-DaemonSet pods with:
+     - `UpgradeStatusLabel` (set to "parked") 
+     - `ExpiresOnLabel` (set to current time + `DriftedNodeExpiration`)
+     - `ParkedByLabel` (set to "k8s-shredder")
+   - **Cordoning** the nodes to prevent new pod scheduling
+   - **Tainting** the nodes with the configured `ParkedNodeTaint`
+
+This integration allows k8s-shredder to automatically handle node lifecycle management for clusters using Karpenter, ensuring that drifted nodes are properly marked for eviction and eventual replacement.
+
+#### Labeled Node Detection
+
+K8s-shredder includes optional automatic detection of nodes with specific labels. This feature is disabled by default but can be enabled by setting `EnableNodeLabelDetection` to `true`. When enabled, at the beginning of each eviction loop, the application will:
+
+1. Scan the Kubernetes cluster for nodes that match any of the configured label selectors in `NodeLabelsToDetect`
+2. Support both key-only (`"maintenance"`) and key=value (`"upgrade=required"`) label formats
+3. Automatically process matching nodes by:
+   - **Labeling** nodes and their non-DaemonSet pods with:
+     - `UpgradeStatusLabel` (set to "parked") 
+     - `ExpiresOnLabel` (set to current time + `DriftedNodeExpiration`)
+     - `ParkedByLabel` (set to "k8s-shredder")
+   - **Cordoning** the nodes to prevent new pod scheduling
+   - **Tainting** the nodes with the configured `ParkedNodeTaint`
+
+This integration allows k8s-shredder to automatically handle node lifecycle management based on custom labeling strategies, enabling teams to mark nodes for parking using their own operational workflows and labels.
+
+#### Creating a new release
+
+See [RELEASE.md](RELEASE.md).

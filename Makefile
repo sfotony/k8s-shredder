@@ -1,4 +1,4 @@
-.PHONY: default help format lint vet security build build-prereq push unit-test local-test ci clean e2e-tests check-license
+.PHONY: default help format lint vet security build build-prereq push unit-test local-test local-test-karpenter local-test-node-labels ci clean e2e-tests check-license
 
 NAME ?= adobe/k8s-shredder
 K8S_SHREDDER_VERSION ?= "dev"
@@ -59,11 +59,31 @@ build: check-license lint vet security unit-test ## Builds the local Docker cont
 
 # TEST
 # -----------
-local-test: build ## Test docker image in a kind cluster
+local-test: build ## Test docker image in a kind cluster (with Karpenter drift and node label detection disabled)
 	@hash kind 2>/dev/null && { \
 		echo "Test docker image in a kind cluster..."; \
 		./internal/testing/local_env_prep.sh "${K8S_SHREDDER_VERSION}" "${KINDNODE_VERSION}" "${TEST_CLUSTERNAME}" && \
 		./internal/testing/cluster_upgrade.sh "${TEST_CLUSTERNAME}" || \
+		exit 1; \
+	} || { \
+		echo >&2 "[WARN] I require kind but it's not installed(see https://kind.sigs.k8s.io). Assuming a cluster is already accessible."; \
+	}
+
+local-test-karpenter: build ## Test docker image in a kind cluster with Karpenter and drift detection enabled
+	@hash kind 2>/dev/null && { \
+		echo "Test docker image in a kind cluster with Karpenter..."; \
+		./internal/testing/local_env_prep_karpenter.sh "${K8S_SHREDDER_VERSION}" "${KINDNODE_VERSION}" "${TEST_CLUSTERNAME}" && \
+		./internal/testing/cluster_upgrade_karpenter.sh "${TEST_CLUSTERNAME}" || \
+		exit 1; \
+	} || { \
+		echo >&2 "[WARN] I require kind but it's not installed(see https://kind.sigs.k8s.io). Assuming a cluster is already accessible."; \
+	}
+
+local-test-node-labels: build ## Test docker image in a kind cluster with node label detection enabled
+	@hash kind 2>/dev/null && { \
+		echo "Test docker image in a kind cluster with node label detection..."; \
+		./internal/testing/local_env_prep_node_labels.sh "${K8S_SHREDDER_VERSION}" "${KINDNODE_VERSION}" "${TEST_CLUSTERNAME}" && \
+		./internal/testing/cluster_upgrade_node_labels.sh "${TEST_CLUSTERNAME}" || \
 		exit 1; \
 	} || { \
 		echo >&2 "[WARN] I require kind but it's not installed(see https://kind.sigs.k8s.io). Assuming a cluster is already accessible."; \

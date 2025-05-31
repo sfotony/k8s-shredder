@@ -23,6 +23,13 @@ shredder:
   RestartedAtAnnotation: "shredder.ethos.adobe.net/restartedAt"
   AllowEvictionLabel: "shredder.ethos.adobe.net/allow-eviction"
   ToBeDeletedTaint: "ToBeDeletedByClusterAutoscaler"
+  ArgoRolloutsAPIVersion: "v1alpha1"
+  DriftedNodeExpiration: "24h"
+  EnableKarpenterDriftDetection: false
+  ParkedByLabel: "shredder.ethos.adobe.net/parked-by"
+  ParkedNodeTaint: "shredder.ethos.adobe.net/upgrade-status=parked:NoSchedule"
+  EnableNodeLabelDetection: false
+  NodeLabelsToDetect: []
 
 rbac:
   create: true

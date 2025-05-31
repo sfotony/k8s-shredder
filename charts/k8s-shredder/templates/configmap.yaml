@@ -16,3 +16,10 @@ data:
     RestartedAtAnnotation: "{{.Values.shredder.RestartedAtAnnotation}}"
     AllowEvictionLabel: "{{.Values.shredder.AllowEvictionLabel}}"
     ToBeDeletedTaint: "{{.Values.shredder.ToBeDeletedTaint}}"
+    ArgoRolloutsAPIVersion: "{{.Values.shredder.ArgoRolloutsAPIVersion}}"
+    DriftedNodeExpiration: "{{.Values.shredder.DriftedNodeExpiration}}"
+    EnableKarpenterDriftDetection: {{.Values.shredder.EnableKarpenterDriftDetection}}
+    ParkedByLabel: "{{.Values.shredder.ParkedByLabel}}"
+    ParkedNodeTaint: "{{.Values.shredder.ParkedNodeTaint}}"
+    EnableNodeLabelDetection: {{.Values.shredder.EnableNodeLabelDetection}}
+    NodeLabelsToDetect: {{- toYaml .Values.shredder.NodeLabelsToDetect | nindent 6}}
