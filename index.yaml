@@ -2,6 +2,25 @@ apiVersion: v1
 entries:
   k8s-shredder:
   - apiVersion: v2
+    appVersion: v0.3.9
+    created: "2026-11-06T14:19:02.982260815Z"
+    description: a novel way of dealing with kubernetes nodes blocked from draining
+    digest: bf6ef09c4aee69e385b9fdf6fb1fb05e0a8021f0cb8c48501a7d706c9c0007b4
+    home: https://github.com/adobe/k8s-shredder
+    icon: https://raw.githubusercontent.com/adobe/k8s-shredder/main/docs/k8s-shredder_logo.jpg
+    maintainers:
+    - email: aneci@adobe.com
+      name: adriananeci
+      url: https://adobe.com
+    - email: gosselin@adobe.com
+      name: sfotony
+      url: https://adobe.com
+    name: k8s-shredder
+    type: application
+    urls:
+    - https://github.com/sfotony/k8s-shredder/releases/download/Helm-Chart-v0.2.9/k8s-shredder-0.2.9.tgz
+    version: 0.2.9
+  - apiVersion: v2
     appVersion: v0.3.8
     created: "2026-01-18T23:48:49.469841961Z"
     description: a novel way of dealing with kubernetes nodes blocked from draining
@@ -262,4 +281,4 @@ entries:
     urls:
     - https://github.com/adobe/k8s-shredder/releases/download/Helm-Chart-v0.0.1/k8s-shredder-0.0.1.tgz
     version: 0.0.1
-generated: "2026-01-18T23:48:49.469942038Z"
+generated: "2026-11-06T14:19:02.982404865Z"
